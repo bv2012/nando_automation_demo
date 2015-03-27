@@ -55,10 +55,16 @@ while [ "$complete" -ne 1 ]; do
 		let seconds=seconds+1
 	fi
 done
+
+# $stackinfo split $stackStatus on [:space]
 echo
 echo "Upping private key to jenkins:"
+# scp -i nando-demo.pem nando-demo.pem ec2-user@${stackinfo[?]}
+echo
+echo "Generate hosts file:
 echo
 echo "Upping hosts file to jenkins:"
+# scp -i nando-demo.pem hosts ec2-user@${stackinfo[?]}
 echo
 echo "$title has deployed in $seconds seconds."
 echo

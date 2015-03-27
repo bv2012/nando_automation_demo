@@ -13,10 +13,7 @@
     		"SSHLocation" : {
       			"Type": "String",
       			"Default": "173.77.221.81/32"
-    		},
-		"PrivateKey" : {
-    			"Type" : "String"
-  		}
+    		}
   	},
  	"Mappings" : {
   		"SubnetConfig" : {
@@ -238,12 +235,6 @@
                            					"mode" : "000644",
                            					"owner" : "root",
                            					"group" : "root"
-							},
-							"/root/nando-demo.pem" : {
-								"content" : { "Ref" : "PrivateKey" },
-								"mode" : "000644",
-								"owner" : "root",
-								"group" : "root"
 							}
                                                 },
 						"commands" : {
