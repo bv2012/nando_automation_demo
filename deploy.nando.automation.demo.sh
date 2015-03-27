@@ -3,6 +3,7 @@
 keyName="nando-demo"
 cfnFile="file://cloudformation.json"
 title="Nando Automation Demo"
+writepem=1
 clear
 echo
 echo "$title Launch Script"
@@ -24,16 +25,14 @@ if [[ $existingKeypair == *$keyName* ]]; then
 fi
 echo
 echo "Creating $keyName private key as $keyName.pem ."
-privateKeyValue=$(aws ec2 create-key-pair --key-name $keyName)
-echo
-echo $privateKeyValue > $keyName.pem
+aws ec2 create-key-pair --key-name $keyName --query 'KeyMaterial' --output text > $keyName.pem
 ls -la $keyName.pem
 echo
 echo
 echo
 echo "Launching stack:"
 echo
-aws cloudformation create-stack --stack-name $keyName --template-body $cfnFile --parameters "ParameterKey=PrivateKey,ParameterValue=$privateKeyValue"
+aws cloudformation create-stack --stack-name $keyName --template-body $cfnFile"
 complete=0
 while [ "$complete" -ne 1 ]; do
 	stackStatus=$(aws cloudformation describe-stacks --stack-name $keyName)
@@ -57,7 +56,9 @@ while [ "$complete" -ne 1 ]; do
 	fi
 done
 echo
+echo "Upping private key to jenkins:"
 echo
+echo "Upping hosts file to jenkins:"
 echo
 echo "$title has deployed in $seconds seconds."
 echo
