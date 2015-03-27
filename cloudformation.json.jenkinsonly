@@ -3,15 +3,20 @@
  	"Description" : "Nando Automation Demo :: Jenkins Only",
   	"Parameters" : {
     		"InstanceType" : {
+      			"Description" : "EC2 instance type",
       			"Type" : "String",
       			"Default" : "m1.small" 
     		},
     		"KeyName": {
+      			"Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
       			"Type": "AWS::EC2::KeyPair::KeyName",
 			"Default": "nando-demo"
     		},
     		"SSHLocation" : {
+      			"Description" : "The IP address range that can be used to SSH to the EC2 instances",
       			"Type": "String",
+      			"MinLength": "9",
+      			"MaxLength": "18",
       			"Default": "173.77.221.81/32"
     		}
   	},
@@ -22,6 +27,7 @@
         			"KeyName" : { "Ref" : "KeyName" },
  				"InstanceType" : { "Ref" : "InstanceType" },
  				"ImageId" : "ami-fb8e9292",
+				"SecurityGroups" :  [ { "Ref" : "NandoDemoSecGroup" } ],
 				"UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
           				"#!/bin/bash\n",
 					"yum -y install puppet\n",
@@ -55,10 +61,10 @@
                                                                 "group"   : "root"
                                                         },      
                                                         "/etc/cfn/hooks.d/cfn-auto-reloader.conf" : {
-                                                                "content" : { "Fn::Join" : ["", [
+                                                                "content": { "Fn::Join" : ["", [
                                                                         "[cfn-auto-reloader-hook]\n",
                                                                         "triggers=post.update\n",
-                                                                        "path=Resources.WebServerInstance.Metadata.AWS::CloudFormation::Init\n",
+                                                                        "path=Resources.jenkins.Metadata.AWS::CloudFormation::Init\n",
                                                                         "action=/opt/aws/bin/cfn-init -v ",
                                                                         "         --stack ", { "Ref" : "AWS::StackName" },
                                                                         "         --resource jenkins ",
@@ -66,8 +72,14 @@
                                                                         "runas=root\n"
                                                                 ]]}
                                                         },
-							"/etc/puppet/init.pp" : {
-								"source" : "http://nando-automation-demo.s3.amazonaws.com/init.pp",
+							"/etc/puppet/installjenkins.pp" : {
+								"source" : "http://nando-automation-demo.s3.amazonaws.com/installjenkins.pp",
+                           					"mode" : "000644",
+                           					"owner" : "root",
+                           					"group" : "root"
+							},
+							"/etc/puppet/installjob.pp" : {
+								"source" : "http://nando-automation-demo.s3.amazonaws.com/installjob.pp",
                            					"mode" : "000644",
                            					"owner" : "root",
                            					"group" : "root"
@@ -79,8 +91,14 @@
                            					"group" : "root"
 							}
                                                 },
+						"commands" : {
+							"installjenkins" : { "command" : "puppet apply /etc/puppet/installjenkins.pp" },
+ 							"installjenksleep" : { "command" : "sleep 180" },
+							"installjob" : { "command" : "puppet apply /etc/puppet/installjob.pp" }
+						},
                                                 "services" : {
                                                         "sysvinit" : {
+								"jenkins" : { "enabled" : "true", "ensureRunning" : "true" },	
                                                                 "cfn-hup" : { "enabled" : "true", "ensureRunning" : "true",
                                                                 "files" : ["/etc/cfn/cfn-hup.conf", "/etc/cfn/hooks.d/cfn-auto-reloader.conf"] }
                                                		}
@@ -90,7 +108,7 @@
                         },
       			"CreationPolicy" : {
         			"ResourceSignal" : {
-          				"Timeout" : "PT5M"
+          			"Timeout" : "PT10M"
         			}
       			}
  		},
@@ -114,5 +132,11 @@
 				]
       			}
     		}
-	}
+	},
+  	"Outputs" : {
+    		"JenkinsURL" : {
+      			"Description" : "JenkinsURL",
+      			"Value" :  { "Fn::Join" : [ "", [ "http://", { "Fn::GetAtt" : [ "jenkins", "PublicDnsName" ] }, ":8080" ]]}
+    		}
+  	}
 }
