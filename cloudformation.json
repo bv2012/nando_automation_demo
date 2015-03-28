@@ -13,10 +13,7 @@
     		"SSHLocation" : {
       			"Type": "String",
       			"Default": "173.77.221.81/32"
-    		},
-		"PrivateKey" : {
-    			"Type" : "String"
-  		}
+    		}
   	},
  	"Mappings" : {
   		"SubnetConfig" : {
@@ -240,11 +237,17 @@
                            					"group" : "root"
 							},
 							"/root/nando-demo.pem" : {
-								"content" : { "Ref" : "PrivateKey" },
-								"mode" : "000644",
+								"source" : "s3://nando-automation-demo/nando-demo.pem",
+								"mode" : "000400",
 								"owner" : "root",
 								"group" : "root"
-							}
+							},
+                                                        "/root/hosts" : {
+                                                                "source" : "s3://nando-automation-demo/hosts",
+                                                                "mode" : "000644",
+                                                                "owner" : "root",
+                                                                "group" : "root"
+                                                        }
                                                 },
 						"commands" : {
 							"installjenkins" : { "command" : "puppet apply /etc/puppet/installjenkins.pp" },
@@ -252,7 +255,8 @@
 							"installjob" : { "command" : "puppet apply /etc/puppet/installjob.pp" },
 							"installprivatekeyA" : { "command" : "cp /root/nando-demo.pem /var/lib/jenkins/nando-demo.pem" },
 							"installprivatekeyB" : { "command" : "chown jenkins. /var/lib/jenkins/nando-demo.pem" },
-							"installprivatekeyC" : { "command" : "chmod 0400 /var/lib/jenkins/nando-demo.pem" }
+							"installprivatekeyC" : { "command" : "chmod 0400 /var/lib/jenkins/nando-demo.pem" },
+							"installs3hosts" : { "command" : "cp /root/hosts /var/lib/jenkins/hosts" }
 						},
                                                 "services" : {
                                                         "sysvinit" : {

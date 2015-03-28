@@ -24,16 +24,15 @@ if [[ $existingKeypair == *$keyName* ]]; then
 fi
 echo
 echo "Creating $keyName private key as $keyName.pem ."
-privateKeyValue=$(aws ec2 create-key-pair --key-name $keyName --query 'KeyMaterial' --output text)
-echo
-echo $privateKeyValue > $keyName.pem
+aws ec2 create-key-pair --key-name $keyName --query 'KeyMaterial' --output text) > $keyName.pem
 ls -la $keyName.pem
+# upload to s3
 echo
 echo
 echo
 echo "Launching stack:"
 echo
-aws cloudformation create-stack --stack-name $keyName --template-body $cfnFile --parameters "ParameterKey=PrivateKey,ParameterValue=$privateKeyValue"
+aws cloudformation create-stack --stack-name $keyName --template-body $cfnFile"
 complete=0
 while [ "$complete" -ne 1 ]; do
 	stackStatus=$(aws cloudformation describe-stacks --stack-name $keyName)
@@ -64,7 +63,7 @@ cat hosts
 echo
 echo "Upload hosts:"
 jenkinsPublicIP=$(aws cloudformation describe-stacks --stack-name $keyName|grep jenkinsPublicIP|cut -f4)
-scp -i nando-demo.pem hosts ec2-user@$jenkinsPublicIP
+# upload hosts to s3
 echo
 echo
 echo
